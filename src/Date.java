@@ -9,6 +9,19 @@ public class Date {
         setBits(Bits);
     }
 
+    public Date(int day, int month, int year) throws Exception{
+        int Bits = 0;
+        Bits |= day;
+        Bits |= (month << 5);
+        Bits |= (year << 9 );
+        if(isValidDate(day, month, year))
+        {
+            this.bits = Bits;
+        } else {
+            throw new Exception("La fecha introducida es invalida");
+        }
+    }
+
     private boolean checkLeap(int year){
         if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
             return true;
@@ -19,36 +32,43 @@ public class Date {
 
     private boolean isValidDate(int day, int month, int year) throws Exception
     {
-        if (month < 1 || month > 12 || day < 1 || day > 31) {
-            return false; // Mes o día fuera de rangos válidos.
+        if (month < 1 || month > 12 ) {
+            throw new Exception("El mes fuera de rango");// Mes o día fuera de rangos válidos.
         }
-
+        if (day < 1 || day > 31) {
+            throw new Exception("El dia se encuentra fuera de rango permitido de un mes comun");
+        }
+        if (year < 1 || year > 8388607)
+        {
+            throw new Exception("El año se encuentra fuera de rango");
+        }
         if (month == 2) {
             // Febrero tiene 29 días en un año bisiesto.
             if (checkLeap(year)) {
-                return day <= 29;
+                if (day <= 29){
+                    return true;
+                } else {
+                    String msg = String.format("El dia %d se encuentra fuera del rango del mes %d del año %d, quiere decir que no es viciesto", day, month, year);
+                    throw new Exception(msg);
+                }
             } else {
-                return day <= 28;
+                if (day <= 28){
+                    return true;
+                } else {
+                    String msg = String.format("El dia %d se encuentra fuera del rango del mes %d", day, month);
+                    throw new Exception(msg);
+                }
             }
         } else if ((month == 4 || month == 6 || month == 9 || month == 11) && day > 30) {
-            return false; // Meses con 30 días.
+            throw new Exception("El mes unicamente contiene 30 dias");// Meses con 30 días.
         }
 
         return true; // El resto de los casos son válidos.
     }
 
-    private boolean checkDate(int day, int month, int year) throws Exception{
-        if(checkLeap(year))
-        {
-            return isValidDate(day,month,year);
-        } else {
-            return isValidDate(day,month,year) && (month != 2 || day <= 28);
-        }
-    }
-
     public int getYear()
     {
-        return (bits & 0XFE00) >> 5;
+        return ((bits >> 9));
     }
 
     public int getMonth()
@@ -67,15 +87,13 @@ public class Date {
     }
 
     public void setBits(int bits)throws Exception{
-        int year = (bits & 0xFE00) >> 9;
-        int day = (bits & 0x1E0) >> 5;
-        int month = (bits & 0x1F);
+        int year = ((bits >> 9) & 0x7F);
+        int month = (bits >> 5) & 0x0F;
+        int day = (bits & 0x1F);
 
-        if(checkDate(day, month, year))
+        if(isValidDate(day, month, year))
         {
             this.bits = bits;
-        } else {
-            throw new Exception("La fecha introducida es invalida");
         }
     }
 
